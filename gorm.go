@@ -115,7 +115,7 @@ type Session struct {
 // Open initialize db session based on dialector
 func Open(dialector Dialector, opts ...Option) (db *DB, err error) {
 	config := &Config{}
-
+	// 对 opts 进行排序
 	sort.Slice(opts, func(i, j int) bool {
 		_, isConfig := opts[i].(*Config)
 		_, isConfig2 := opts[j].(*Config)
@@ -127,6 +127,7 @@ func Open(dialector Dialector, opts ...Option) (db *DB, err error) {
 			if applyErr := opt.Apply(config); applyErr != nil {
 				return nil, applyErr
 			}
+			// 做了变量保护
 			defer func(opt Option) {
 				if errr := opt.AfterInitialize(db); errr != nil {
 					err = errr
@@ -134,7 +135,7 @@ func Open(dialector Dialector, opts ...Option) (db *DB, err error) {
 			}(opt)
 		}
 	}
-
+	// 接口类型断言
 	if d, ok := dialector.(interface{ Apply(*Config) error }); ok {
 		if err = d.Apply(config); err != nil {
 			return
@@ -167,6 +168,7 @@ func Open(dialector Dialector, opts ...Option) (db *DB, err error) {
 
 	db = &DB{Config: config, clone: 1}
 
+	// 初始化callbacks
 	db.callbacks = initializeCallbacks(db)
 
 	if config.ClauseBuilders == nil {
